@@ -304,8 +304,8 @@ i_peak, i_trough = np.argmax(nn_pred), np.argmin(nn_pred)
 col1, col2, col3, col4 = st.columns(4)
 col1.metric('12-week Units sold', f'{total_units:,.0f}')
 col2.metric('12-week Revenue', f'${total_revenue:,.0f}')
-col3.metric('Peak week', f'{labels[i_peak]}')
-col4.metric('Peak week', f'{labels[i_trough]}')
+col3.metric('Highest revenue week', f'{labels[i_peak]}')
+col4.metric('Lowest revenue week', f'{labels[i_trough]}')
 
 
 # ------------- Acknowledgements ------------
