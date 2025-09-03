@@ -244,7 +244,7 @@ doy = t.tm_yday
 
 # Start predicting from next Monday
 today = date.fromtimestamp(time.mktime(t))
-days_to_next_monday = ((7 - dow) % 7) or 7
+days_to_next_monday = (7 - dow) % 7
 start = today + timedelta(days=days_to_next_monday)
 
 # Get week start-dates
@@ -282,7 +282,7 @@ ax.set_ylim(0, 1.1*max(np.max(nn_pred), np.max(lgbm_pred)))
 ax.set_xticks(x)
 ax.set_xticklabels(labels)
 ax.tick_params(axis='x', labelsize=6.5)
-ax.set_xlabel('Weeks start-dates (MM/DD)')
+ax.set_xlabel('Week start-dates (MM/DD)')
 ax.set_ylabel('Units sold')
 ax.set_title('12 Week Demand Forecast')
 ax.legend()
