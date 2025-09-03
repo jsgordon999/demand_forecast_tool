@@ -294,6 +294,14 @@ ax.legend()
 
 st.pyplot(fig)
 
+# ---------- Insights -----------------
+
+total_units = np.sum(nn_pred)
+total_revenue = np.sum(total_price * nn_pred)
+col1, col2 = st.columns(2)
+col1.metric("12-week Units sold (NN): {total_units:,.0f}")
+col2.metric("12-week Revenue (NN): {total_revenue:,.0f}")
+
 
 # ------------- Acknowledgements ------------
 with st.expander('Acknowledgements'):
