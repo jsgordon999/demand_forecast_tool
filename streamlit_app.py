@@ -10,14 +10,11 @@ import lightgbm as lgb
 
 st.set_page_config(page_title='Demand Forecasting', layout='wide')
 
-# st.cache_data.clear()
-# st.cache_resource.clear()
-
 # ---------- These will cache items for faster re-loading of page ----------
 @st.cache_data
 def load_data():
     data = np.load('prediction_time_data.npz')
-    with open("product_stats.json") as f:
+    with open('product_stats.json') as f:
         d = json.load(f)
     product_stats = {int(k): tuple(v) for k, v in d.items()}
 
@@ -42,7 +39,7 @@ def load_models():
         decayrate=0.5
     )
     nn.load('NN_forecaster.keras')
-    booster = lgb.Booster(model_file="lgbm_model.txt")
+    booster = lgb.Booster(model_file='lgbm_model.txt')
     return nn, booster
 
 @st.cache_data
@@ -56,7 +53,7 @@ def lgbm_predict_cached(store_ids, sku_ids, Xcont):
     X_pred = np.concatenate([store_ids, sku_ids, Xcont], axis=1)
     return np.expm1(booster.predict(X_pred))
 
-# ---------- Loading data ----------------
+# Loading data 
 data = load_data()
 nn, booster = load_models()
 
@@ -75,24 +72,24 @@ with st.expander(r'**Problem Statement and Dataset**', expanded=False):
     st.write('''The problem statement for this dataset, from 
         [**Kaggle**](https://www.kaggle.com/datasets/aswathrao/demand-forecasting?):''')
 
-    st.write(''' "*One of the largest retail chains in the world wants to use their vast data source to build 
+    st.write(''' '*One of the largest retail chains in the world wants to use their vast data source to build 
         an efficient forecasting model to predict the sales for each SKU in its portfolio at its 76 different 
         stores using historical sales data for the past 3 years on a week-on-week basis. Sales and promotional 
         information is also available for each week - product and store wise. However, no other information 
         regarding stores and products are available. Can you still forecast accurately the sales values for 
-        every such product/SKU-store combination for the next 12 weeks accurately?*" ''')
+        every such product/SKU-store combination for the next 12 weeks accurately?*' ''')
 
     st.write('These are the original columns provided in the dataset:')
     schema = [
-        {"Feature":"record_ID",       "Type":"int",    "Description":"Row identifier"},
-        {"Feature":"week",            "Type":"date",   "Description":"Week timestamp (YYYY-MM-DD)"},
-        {"Feature":"store_id",        "Type":"int",    "Description":"Store ID number"},
-        {"Feature":"sku_id",          "Type":"int",    "Description":"Product ID number"},
-        {"Feature":"total_price",     "Type":"float",  "Description":"Discounted price"},
-        {"Feature":"base_price",      "Type":"float",  "Description":"Regular price"},
-        {"Feature":"is_featured_sku", "Type":"0/1",    "Description":"Featured in ad that week?"},
-        {"Feature":"is_display_sku",  "Type":"0/1",    "Description":"On display that week?"},
-        {"Feature":"units_sold",      "Type":"int",    "Description":"Units sold that week (demand)"},
+        {'Feature':'record_ID',       'Type':'int',    'Description':'Row identifier'},
+        {'Feature':'week',            'Type':'date',   'Description':'Week timestamp (YYYY-MM-DD)'},
+        {'Feature':'store_id',        'Type':'int',    'Description':'Store ID number'},
+        {'Feature':'sku_id',          'Type':'int',    'Description':'Product ID number'},
+        {'Feature':'total_price',     'Type':'float',  'Description':'Discounted price'},
+        {'Feature':'base_price',      'Type':'float',  'Description':'Regular price'},
+        {'Feature':'is_featured_sku', 'Type':'0/1',    'Description':'Featured in ad that week?'},
+        {'Feature':'is_display_sku',  'Type':'0/1',    'Description':'On display that week?'},
+        {'Feature':'units_sold',      'Type':'int',    'Description':'Units sold that week (demand)'},
     ]
     st.table(pd.DataFrame(schema))
 
@@ -116,7 +113,7 @@ with st.expander(r'**Feature Engineering**', expanded=False):
         form that is periodic, so that the model may easily associate Mon. $\approx$ Sun., and Dec. 31 $\approx$ Jan. 1.''')
 
 # -------------- NN Architecture ----------------
-with st.expander(r'**Neural Network Architecture**', expanded=False):
+with st.expander(r'**Neural Network Architecture and Validation**', expanded=False):
     st.write(r'''In order to learn features about the stores and products, I use a learnable embedding for the store_id and 
         another for the sku_id, each being mapped to a 16-dimensional vector. I then concatenate these with the 10 other features 
         to form a 42-dimensional input which is fed into a fully connected MLP ($42 \rightarrow 256 \rightarrow 256 \rightarrow 256 \rightarrow 1$) 
@@ -124,40 +121,40 @@ with st.expander(r'**Neural Network Architecture**', expanded=False):
 
     dot = r'''digraph G {
       rankdir=LR; nodesep=0.5; ranksep=0.5;
-      node [fontname="Helvetica", color="#444", fixedsize=true];
+      node [fontname='Helvetica', color='#444', fixedsize=true];
 
-      // ------- ID inputs & embeddings -------
-      store_in [shape=box, style=filled, width=1.0, height=0.5, fillcolor="#f6f8fa", label="store_id (1)"];
-      sku_in   [shape=box, style=filled, width=1.0, height=0.5, fillcolor="#f6f8fa", label="sku_id (1)"];
+      // ------- ID inputs and embeddings -------
+      store_in [shape=box, style=filled, width=1.0, height=0.5, fillcolor='#f6f8fa', label='store_id (1)'];
+      sku_in   [shape=box, style=filled, width=1.0, height=0.5, fillcolor='#f6f8fa', label='sku_id (1)'];
 
-      emb_store [shape=box, style=filled, width=1.7, height=0.9, fillcolor="#ffe5cc",
-                 label="Embedding\nstores 76×16"];
-      emb_sku   [shape=box, style=filled, width=1.7, height=0.9, fillcolor="#ffe5cc",
-                 label="Embedding\nskus 28×16"];
+      emb_store [shape=box, style=filled, width=1.7, height=0.9, fillcolor='#ffe5cc',
+                 label='Embedding\nstores 76×16'];
+      emb_sku   [shape=box, style=filled, width=1.7, height=0.9, fillcolor='#ffe5cc',
+                 label='Embedding\nskus 28×16'];
 
-      // ------- Target-week feature block (becomes x_cont) -------
-      tgt [shape=box, style=filled, fixedsize=false, fillcolor="#f6f8fa",
-           label="base_price, total_price, discount,\n\ discount_pct, is_featured_sku,\n\ is_display_sku, sin_dow, cos_dow,\n\ sin_doy, cos_doy (10)"];
+      // ------- Xcont -------
+      tgt [shape=box, style=filled, fixedsize=false, fillcolor='#f6f8fa',
+           label='base_price, total_price, discount,\n\ discount_pct, is_featured_sku,\n\ is_display_sku, sin_dow, cos_dow,\n\ sin_doy, cos_doy (10)'];
 
 
       // Concat node (embeddings + features)
-      concat [shape=circle, style=filled, width=0.38, fillcolor="#eeeeee", label="⊕"];
+      concat [shape=circle, style=filled, width=0.38, fillcolor='#eeeeee', label='⊕'];
 
-      // ------- MLP trunk -------
-      h1   [shape=box, style=filled, width=0.9, height=1.3, fillcolor="#cce5ff", label="Dense 1 (256)"];
-      act1 [shape=ellipse, width=0.55, height=0.35, label="ReLU"];
-      drop1[shape=ellipse, width=0.8, height=0.35, label="Dropout 0.1"];
+      // ------- MLP -------
+      h1   [shape=box, style=filled, width=0.9, height=1.3, fillcolor='#cce5ff', label='Dense 1 (256)'];
+      act1 [shape=ellipse, width=0.55, height=0.35, label='ReLU'];
+      drop1[shape=ellipse, width=0.8, height=0.35, label='Dropout 0.1'];
 
-      h2   [shape=box, style=filled, width=0.9, height=1.3, fillcolor="#cce5ff", label="Dense 2 (256)"];
-      act2 [shape=ellipse, width=0.55, height=0.35, label="ReLU"];
-      drop2[shape=ellipse, width=0.8, height=0.35, label="Dropout 0.1"];
+      h2   [shape=box, style=filled, width=0.9, height=1.3, fillcolor='#cce5ff', label='Dense 2 (256)'];
+      act2 [shape=ellipse, width=0.55, height=0.35, label='ReLU'];
+      drop2[shape=ellipse, width=0.8, height=0.35, label='Dropout 0.1'];
 
-      h3   [shape=box, style=filled, width=0.9, height=1.3, fillcolor="#cce5ff", label="Dense 3 (256)"];
-      act3 [shape=ellipse, width=0.55, height=0.35, label="ReLU"];
-      drop3[shape=ellipse, width=0.8, height=0.35, label="Dropout 0.1"];
+      h3   [shape=box, style=filled, width=0.9, height=1.3, fillcolor='#cce5ff', label='Dense 3 (256)'];
+      act3 [shape=ellipse, width=0.55, height=0.35, label='ReLU'];
+      drop3[shape=ellipse, width=0.8, height=0.35, label='Dropout 0.1'];
 
-      out  [shape=box, style=filled, width=1.3, height=1.0, fillcolor="#d5f5e3",
-            label="Output\nlog1p(units_sold) (1)"];
+      out  [shape=box, style=filled, width=1.3, height=1.0, fillcolor='#d5f5e3',
+            label='Output\nlog1p(units_sold) (1)'];
 
       // ------- Edges -------
       store_in -> emb_store -> concat;
@@ -169,8 +166,9 @@ with st.expander(r'**Neural Network Architecture**', expanded=False):
 
     st.graphviz_chart(dot, use_container_width=True)
 
-    st.write(r'''I used the last 8 weeks of data to form a validation set, which was comprised of 9240 samples from the original 150150. The NN predictions 
-        were compared to a validation set and same was done with LightGBM as a benchmark. The NN obtained a wMAPE of 25.21\%, essentially tying LightGBM's 25.45\%.''')
+    st.write(r'''I used the last 8 weeks of data to form a validation set, which was comprised of 9240 samples from the original 150150. 
+        This validation set was used for early stopping during training. The NN validation errors were then compared to those of LightGBM as 
+        a benchmark. The NN obtained a wMAPE of 25.21\%, essentially tying LightGBM's 25.45\%.''')
 
 
 
@@ -186,11 +184,12 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.markdown(f'**Product Number (1–{n_skus})**')
-    sku_ord = st.slider('sku_id', 1, 28, 1, 1, key='sku_id', label_visibility="collapsed")
+    sku_ord = st.slider('sku_id', 1, 28, 1, 1, key='sku_id', label_visibility='collapsed')
 
 with col2:
     st.markdown(f'**Store Number (1–{n_stores})**')
-    store_ord = st.slider('store_id', 1, 76, 1, 1, key='store_id', label_visibility="collapsed")
+    store_ord = st.slider('store_id', 1, 76, 1, 1, key='store_id', label_visibility='collapsed')
+
 store_idx = store_ord - 1
 sku_idx = sku_ord -1
 base_lo, base_md, base_hi, disc_lo, disc_md, disc_hi, total_lo, total_hi = product_stats[sku_idx]
@@ -205,11 +204,11 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.markdown(f'**Base Price**')
-    base_price = st.slider('base_price', base_lo, base_hi, base_md, 1.0, key='base_price', label_visibility="collapsed")
+    base_price = st.slider('base_price', base_lo, base_hi, base_md, 1.0, key='base_price', label_visibility='collapsed')
 
 with col2:
     st.markdown(f'**Discount Percentage \% (negative = markup)**')
-    discount_pct_100 = st.slider('discount_pct', 100*disc_lo, 100*disc_hi, 100*disc_md, 1.0, key='discount_pct', label_visibility="collapsed")
+    discount_pct_100 = st.slider('discount_pct', 100*disc_lo, 100*disc_hi, 100*disc_md, 1.0, key='discount_pct', label_visibility='collapsed')
 
 discount_pct = discount_pct_100/100.0
 discount = discount_pct*base_price
@@ -222,9 +221,9 @@ if not (total_lo <= total_price <= total_hi):
 st.write(f'''Select whether the product was featured in ads this week, and whether it was on display:''')
 col1, col2 = st.columns(2)
 with col1:
-    featured_toggle = st.toggle("**Featured this week?**", value=False, key="feat")
+    featured_toggle = st.toggle('**Featured this week?**', value=False, key='feat')
 with col2:
-    display_toggle  = st.toggle("**On display?**", value=False, key="disp")
+    display_toggle  = st.toggle('**On display?**', value=False, key='disp')
 
 is_featured = int(featured_toggle)  # 1/0 for your model
 is_display  = int(display_toggle)
@@ -233,16 +232,19 @@ is_display  = int(display_toggle)
 Xcont_unscaled = np.zeros((12,10), dtype=np.float32)
 Xcont_unscaled[:,:6] = np.array([base_price, total_price, discount, discount_pct, is_featured, is_display])
 
-os.environ["TZ"] = "America/New_York"
-try:
-    time.tzset() 
-except AttributeError:
-    pass
+# Get date in NY
+oos.environ['TZ'] = 'America/New_York'
+if hasattr(time, 'tzset'):
+    time.tzset()
 
-t = time.localtime()
-dow = t.tm_wday
-doy = t.tm_yday
+t   = time.localtime()
+dow = t.tm_wday  
+doy = t.tm_yday   
 
+# Start predicting from next Monday
+days_to_next_monday = (7 - dow) % 7
+doy += days_to_next_monday
+dow = 0
 for i in range(12):
     sin_doy, cos_doy = np.sin(2*np.pi*doy/365.0), np.cos(2*np.pi*doy/365.0)
     sin_dow, cos_dow = np.sin(2*np.pi*dow/7.0), np.cos(2*np.pi*dow/7.0)
@@ -267,12 +269,12 @@ st.info(f'LightGBM inference time for all 12 weeks: **{elapsed_ms:.1f} ms** on C
 weeks = np.arange(1, 13)
 
 fig, ax = plt.subplots(figsize=(5, 2.375))
-ax.plot(weeks, nn_pred, marker="o", label="NN")
-ax.plot(weeks, lgbm_pred, marker="o", label="LightGBM")
+ax.plot(weeks, nn_pred, marker='o', label='NN')
+ax.plot(weeks, lgbm_pred, marker='o', label='LightGBM')
 ax.set_ylim(0, 1.1*max(np.max(nn_pred), np.max(lgbm_pred)))
-ax.set_xlabel("Weeks from today")
-ax.set_ylabel("Units sold")
-ax.set_title("12 Week Demand Forecast")
+ax.set_xlabel('Weeks from today')
+ax.set_ylabel('Units sold')
+ax.set_title('12 Week Demand Forecast')
 ax.legend()
 
 st.pyplot(fig)
