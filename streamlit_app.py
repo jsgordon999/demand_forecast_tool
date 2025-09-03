@@ -296,12 +296,16 @@ st.pyplot(fig)
 
 # ---------- Insights -----------------
 st.markdown('**Business Insights and Metrics**')
+st.write('The NN model predicts the following:')
 total_units = np.sum(nn_pred)
 total_revenue = np.sum(total_price * nn_pred)
 
 col1, col2 = st.columns(2)
-col1.metric("12-week units (NN)", f"{total_units:,.0f}")
-col2.metric("12-week revenue (NN)", f"${total_revenue:,.0f}")
+col1.metric("12-week Units sold", f"{total_units:,.0f}")
+col2.metric("12-week Revenue", f"${total_revenue:,.0f}")
+
+i_peak, i_trough = np.argmax(nn_pred), np.argmin(nn_pred)
+st.caption(f"Peak week: **{labels[i_peak]}**  ·  Trough: **{labels[i_trough]}**")
 
 
 # ------------- Acknowledgements ------------
