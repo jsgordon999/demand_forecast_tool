@@ -238,13 +238,13 @@ os.environ['TZ'] = 'America/New_York'
 if hasattr(time, 'tzset'):
     time.tzset()
 
-t   = time.localtime()
-dow = t.tm_wday  
-doy = t.tm_yday   
+# Get week start-dates
+t = time.localtime()
+today = date.fromtimestamp(time.mktime(t))
+dow_today = t.tm_wday 
 
 # Start predicting from next Monday
-today = date.fromtimestamp(time.mktime(t))
-days_to_next_monday = (7 - dow) % 7
+days_to_next_monday = ((7 - dow_today) % 7) or 7
 start = today + timedelta(days=days_to_next_monday)
 
 # Get week start-dates
@@ -252,7 +252,11 @@ week_dates = [start + timedelta(days=7*i) for i in range(12)]
 x = np.arange(1, 13)
 labels = [f"{d.month}/{d.day}" for d in week_dates]
 
+# Build features FROM the same dates you label
 for i in range(12):
+    d = start + timedelta(days=7*i)
+    dow = d.weekday()                  # 0..6 (will be 0 = Monday here)
+    doy = d.timetuple().tm_yday   
     sin_doy, cos_doy = np.sin(2*np.pi*doy/365.0), np.cos(2*np.pi*doy/365.0)
     sin_dow, cos_dow = np.sin(2*np.pi*dow/7.0), np.cos(2*np.pi*dow/7.0)
     Xcont_unscaled[i,6:] = np.array([sin_doy, cos_doy, sin_dow, cos_dow])
