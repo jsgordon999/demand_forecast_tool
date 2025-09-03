@@ -242,9 +242,15 @@ dow = t.tm_wday
 doy = t.tm_yday   
 
 # Start predicting from next Monday
-days_to_next_monday = (7 - dow) % 7
-doy += days_to_next_monday
-dow = 0
+today = date.fromtimestamp(time.mktime(t))
+days_to_next_monday = ((7 - dow) % 7) or 7
+start = today + timedelta(days=days_to_next_monday)
+
+# Get week start-dates
+week_dates = [start + timedelta(days=7*i) for i in range(12)]
+x = np.arange(1, 13)
+labels = [f"{d.month}/{d.day}" for d in week_dates]
+
 for i in range(12):
     sin_doy, cos_doy = np.sin(2*np.pi*doy/365.0), np.cos(2*np.pi*doy/365.0)
     sin_dow, cos_dow = np.sin(2*np.pi*dow/7.0), np.cos(2*np.pi*dow/7.0)
@@ -272,7 +278,9 @@ fig, ax = plt.subplots(figsize=(5, 2.375))
 ax.plot(weeks, nn_pred, marker='o', label='NN')
 ax.plot(weeks, lgbm_pred, marker='o', label='LightGBM')
 ax.set_ylim(0, 1.1*max(np.max(nn_pred), np.max(lgbm_pred)))
-ax.set_xlabel('Weeks from today')
+ax.set_xticks(x)
+ax.set_xticklabels(labels)
+ax.set_xlabel('Weeks start-dates (MM/DD)')
 ax.set_ylabel('Units sold')
 ax.set_title('12 Week Demand Forecast')
 ax.legend()
