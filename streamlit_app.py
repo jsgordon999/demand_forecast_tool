@@ -235,10 +235,11 @@ Xcont_unscaled[:,:6] = np.array([base_price, total_price, discount, discount_pct
 
 os.environ["TZ"] = "America/New_York"
 try:
-    time.tzset()  # no-op on Windows; fine on Linux
+    time.tzset() 
 except AttributeError:
-    passt = time.localtime() 
+    pass
 
+t = time.localtime()
 dow = t.tm_wday
 doy = t.tm_yday
 
