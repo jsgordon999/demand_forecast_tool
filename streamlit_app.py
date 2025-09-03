@@ -233,7 +233,7 @@ Xcont_unscaled = np.zeros((12,10), dtype=np.float32)
 Xcont_unscaled[:,:6] = np.array([base_price, total_price, discount, discount_pct, is_featured, is_display])
 
 # Get date in NY
-oos.environ['TZ'] = 'America/New_York'
+os.environ['TZ'] = 'America/New_York'
 if hasattr(time, 'tzset'):
     time.tzset()
 
