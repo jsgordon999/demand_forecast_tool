@@ -1,4 +1,5 @@
-import time  
+import time
+import os  
 import numpy as np
 import pandas as pd
 import json
@@ -232,7 +233,12 @@ is_display  = int(display_toggle)
 Xcont_unscaled = np.zeros((12,10), dtype=np.float32)
 Xcont_unscaled[:,:6] = np.array([base_price, total_price, discount, discount_pct, is_featured, is_display])
 
-t = time.localtime()
+os.environ["TZ"] = "America/New_York"
+try:
+    time.tzset()  # no-op on Windows; fine on Linux
+except AttributeError:
+    passt = time.localtime() 
+
 dow = t.tm_wday
 doy = t.tm_yday
 
