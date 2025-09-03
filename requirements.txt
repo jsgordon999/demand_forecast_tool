@@ -1,0 +1,7 @@
+streamlit==1.36.0
+numpy==1.26.4
+tensorflow==2.15.0
+graphviz==0.20.3
+pandas==2.2.2
+lightgbm==4.2.0
+matplotlib==3.8.4
