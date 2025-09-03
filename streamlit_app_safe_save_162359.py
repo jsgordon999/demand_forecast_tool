@@ -174,7 +174,7 @@ with st.expander(r'**Neural Network Architecture and Validation**', expanded=Fal
 
 
 # ---------- Interactive Tool -----------------
-st.write(r'**Forecasting Tool**')
+st.markdown(r'**Forecasting Tool**')
 
 n_stores = len(store_ids)  # 76
 n_skus   = len(sku_ids)    # 28
@@ -295,13 +295,13 @@ ax.legend()
 st.pyplot(fig)
 
 # ---------- Insights -----------------
-st.markdown('Business Insights and Metrics')
+st.markdown('**Business Insights and Metrics**')
 total_units = np.sum(nn_pred)
 total_revenue = np.sum(total_price * nn_pred)
 
 col1, col2 = st.columns(2)
-col1.metric(f"12-week Units sold (NN): ${total_units:,.0f}")
-col2.metric(f"12-week Revenue (NN): ${total_revenue:,.0f}")
+col1.metric(f'12-week Units sold (NN): ${total_units:,.0f}')
+col2.metric(f'12-week Revenue (NN): ${total_revenue:,.0f}')
 
 
 # ------------- Acknowledgements ------------
