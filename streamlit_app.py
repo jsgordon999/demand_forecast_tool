@@ -280,7 +280,7 @@ st.info(f'LightGBM inference time for all 12 weeks: **{elapsed_ms:.1f} ms** on C
 weeks = np.arange(1, 13)
 
 fig, ax = plt.subplots(figsize=(5, 2.375))
-ax.plot(weeks, nn_pred, marker='o', label='NN')
+ax.plot(weeks, nn_pred, marker='^', label='NN')
 ax.plot(weeks, lgbm_pred, marker='o', label='LightGBM')
 ax.set_ylim(0, 1.1*max(np.max(nn_pred), np.max(lgbm_pred)))
 ax.set_xticks(x)
